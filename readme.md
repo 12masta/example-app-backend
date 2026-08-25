@@ -2,8 +2,8 @@
 
 Private RealWorld (Conduit) API for agent demos. This repository is a copy of [realworld-apps/aspnetcore-realworld-example-app](https://github.com/realworld-apps/aspnetcore-realworld-example-app) (MIT). Pair it with the React TypeScript frontend in [example-app-frontend](https://github.com/12masta/example-app-frontend).
 
-- API: `http://localhost:5000/api`
-- Swagger: `http://localhost:5000/swagger`
+- API: `http://localhost:5080/api`
+- Swagger: `http://localhost:5080/swagger`
 
 # ![RealWorld Example App](logo.png)
 
@@ -79,7 +79,7 @@ dotnet run --project build/build.csproj -- test
 
 Run the API with `make run-local`. Swagger is available at:
 
-`http://localhost:5000/swagger`
+`http://localhost:5080/swagger`
 
 ## RealWorld API spec tests
 
