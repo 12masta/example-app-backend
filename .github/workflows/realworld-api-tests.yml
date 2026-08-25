@@ -2,6 +2,9 @@ name: RealWorld API Tests
 
 on:
   push:
+    branches:
+      - main
+      - master
   schedule:
     # weekly canary against the upstream spec HEAD, to surface drift before the
     # Dependabot submodule bump PR does
