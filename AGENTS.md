@@ -10,7 +10,7 @@
 
 ## Toolchain
 
-- Use the .NET SDK version pinned in `global.json` (`10.0.302`) and target `net10.0`.
+- Use a .NET 10 SDK (`10.0.100` or later in the 10.0 band, pinned in `global.json` with `rollForward: latestMinor`). CI installs `10.0.302`. Target `net10.0`.
 - Package versions are managed centrally in `Directory.Packages.props`.
 - Restore packages with lock files enabled. Restore updates to `packages.lock.json` files should be included when dependencies change.
 - Nullable reference types, recommended analyzers, code-style checks, and warnings-as-errors are enabled in `Directory.Build.props`.
@@ -36,7 +36,7 @@ The CI-equivalent build, test, and publish pipeline is:
 dotnet run --project build/build.csproj
 ```
 
-Run the application locally with `make run-local`. The API is available at `http://localhost:5000`, and Swagger is available at `/swagger`.
+Run the application locally with `make run-local`. The API is available at `http://localhost:5080`, and Swagger is available at `/swagger`. Port `5080` avoids macOS AirPlay Receiver, which binds `5000`.
 
 The optional RealWorld API suites require the `realworld` submodule plus Hurl or Bun/Bruno:
 
