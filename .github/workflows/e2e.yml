@@ -11,8 +11,9 @@ permissions:
 
 jobs:
   e2e:
-    name: Playwright critical path
+    name: E2E coverage
     uses: 12masta/example-app-e2e/.github/workflows/e2e.yml@main
     with:
       frontend_ref: main
       backend_ref: ${{ github.sha }}
+      coverage: true

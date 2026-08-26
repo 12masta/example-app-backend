@@ -46,6 +46,8 @@ make test-hurl-with-managed-server
 make test-bruno-with-managed-server
 ```
 
+The `test` target also writes Coverlet Cobertura under `artifacts/coverage/slice`. That is the unit-level coverage check. It does not start Playwright. End-to-end coverage is the e2e repo workflow with `coverage: true` after merge to `main`.
+
 ## Development Practices
 
 - Keep commands, queries, validators, handlers, and related models together under the relevant feature folder.

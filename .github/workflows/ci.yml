@@ -11,8 +11,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build-and-test:
-    name: Build and test
+  unit-coverage:
+    name: Unit coverage
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
