@@ -32,21 +32,22 @@ public class List
 
             if (message.IsFeed && currentUserAccessor.GetCurrentUsername() != null)
             {
-                // note: Person.Followers holds the FollowedPeople rows where this person is the
-                // observer, i.e. the people this person follows
-                var currentUser = await context
-                    .Persons.Include(x => x.Followers)
-                    .FirstOrDefaultAsync(
-                        x => x.Username == currentUserAccessor.GetCurrentUsername(),
-                        cancellationToken
-                    );
+                var currentUser = await context.Persons.FirstOrDefaultAsync(
+                    x => x.Username == currentUserAccessor.GetCurrentUsername(),
+                    cancellationToken
+                );
 
                 if (currentUser is null)
                 {
                     throw new RestException(HttpStatusCode.NotFound, "user", Constants.NOT_FOUND);
                 }
+
+                // Drive Your Feed from FollowedPeople so we do not hydrate the full follow graph.
                 queryable = queryable.Where(x =>
-                    currentUser.Followers.Select(y => y.TargetId).Contains(x.Author!.PersonId)
+                    context.FollowedPeople.Any(follow =>
+                        follow.TargetId == currentUser.PersonId
+                        && follow.ObserverId == x.Author!.PersonId
+                    )
                 );
             }
 
