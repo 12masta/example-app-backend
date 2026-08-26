@@ -42,13 +42,7 @@ public class List
                     throw new RestException(HttpStatusCode.NotFound, "user", Constants.NOT_FOUND);
                 }
 
-                // Restrict Your Feed to articles whose author follows the current reader.
-                queryable = queryable.Where(article =>
-                    context.FollowedPeople.Any(relationship =>
-                        relationship.TargetId == currentUser.PersonId
-                        && relationship.ObserverId == article.Author!.PersonId
-                    )
-                );
+                queryable = queryable.Where(x => x.Author!.PersonId != currentUser.PersonId);
             }
 
             if (!string.IsNullOrWhiteSpace(message.Tag))
