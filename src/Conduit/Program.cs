@@ -9,19 +9,11 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi;
 
-// read database configuration (database provider + database connection) from environment variables
-//Environment.GetEnvironmentVariable(DEFAULT_DATABASE_PROVIDER)
-//Environment.GetEnvironmentVariable(DEFAULT_DATABASE_CONNECTION_STRING)
-var defaultDatabaseConnectionString = "Filename=realworld.db";
-var defaultDatabaseProvider = "sqlite";
-
 var builder = WebApplication.CreateBuilder(args);
 
-// take the connection string from the environment variable or use hard-coded database name
-var connectionString = defaultDatabaseConnectionString;
-
-// take the database provider from the environment variable or use hard-coded database provider
-var databaseProvider = defaultDatabaseProvider;
+var connectionString =
+    builder.Configuration["Database:ConnectionString"] ?? "Filename=realworld.db";
+var databaseProvider = builder.Configuration["Database:Provider"] ?? "sqlite";
 
 builder.Services.AddDbContext<ConduitContext>(options =>
 {

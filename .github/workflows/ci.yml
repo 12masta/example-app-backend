@@ -28,6 +28,15 @@ jobs:
       - name: Format, build, and test
         run: dotnet run --project build/build.csproj -- test
 
+      - name: Upload slice coverage
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: slice-cobertura
+          path: artifacts/coverage/slice/**/coverage.cobertura.xml
+          if-no-files-found: error
+          retention-days: 14
+
   api-spec:
     name: RealWorld API spec (Hurl)
     runs-on: ubuntu-latest

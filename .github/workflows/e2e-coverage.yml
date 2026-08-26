@@ -1,0 +1,129 @@
+name: E2E coverage
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: e2e-coverage-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  playwright-coverage:
+    name: Playwright coverage (API Coverlet + JS V8)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout backend
+        uses: actions/checkout@v7
+        with:
+          path: backend
+
+      - name: Checkout frontend
+        uses: actions/checkout@v7
+        with:
+          repository: 12masta/example-app-frontend
+          ref: main
+          path: frontend
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: yarn
+          cache-dependency-path: frontend/yarn.lock
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 10.0.302
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        env:
+          HUSKY: '0'
+        run: yarn install --frozen-lockfile
+
+      - name: Generate frontend API client
+        working-directory: frontend
+        run: yarn generate
+
+      - name: Restore and build Playwright tests
+        working-directory: backend
+        run: |
+          dotnet restore tests/Conduit.PlaywrightTests/Conduit.PlaywrightTests.csproj --locked-mode
+          dotnet build tests/Conduit.PlaywrightTests/Conduit.PlaywrightTests.csproj -c Release --no-restore
+
+      - name: Install Playwright Chromium
+        working-directory: backend
+        run: pwsh tests/Conduit.PlaywrightTests/bin/Release/net10.0/playwright.ps1 install --with-deps chromium
+
+      - name: Start frontend
+        working-directory: frontend
+        env:
+          API_URL: http://localhost:5080/api
+          PORT: '30401'
+        run: |
+          nohup yarn start > "${RUNNER_TEMP}/frontend.log" 2>&1 &
+          echo $! > "${RUNNER_TEMP}/frontend.pid"
+
+      - name: Wait for frontend
+        run: |
+          for i in $(seq 1 60); do
+            if curl -fsS http://localhost:30401 >/dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Frontend did not become ready"
+          cat "${RUNNER_TEMP}/frontend.log"
+          exit 1
+
+      - name: Run Playwright tests with Coverlet
+        working-directory: backend
+        env:
+          BASE_URL: http://localhost:30401
+        run: >
+          dotnet test tests/Conduit.PlaywrightTests/Conduit.PlaywrightTests.csproj
+          -c Release --no-restore --no-build --verbosity=normal
+          --collect:"XPlat Code Coverage"
+          --results-directory artifacts/coverage/e2e-api
+          --settings tests/coverlet.runsettings
+
+      - name: Install V8 mapper
+        working-directory: backend/tests/Conduit.PlaywrightTests/v8-map
+        run: npm ci
+
+      - name: Map V8 coverage to lcov
+        working-directory: backend
+        env:
+          REPO_ROOT: ${{ github.workspace }}/backend
+          FRONTEND_ROOT: ${{ github.workspace }}/frontend
+        run: node tests/Conduit.PlaywrightTests/v8-map/v8-to-lcov.mjs
+        continue-on-error: true
+
+      - name: Upload e2e API coverage
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-api-cobertura
+          path: backend/artifacts/coverage/e2e-api/**/coverage.cobertura.xml
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload e2e JS coverage
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-js-lcov
+          path: |
+            backend/artifacts/coverage/e2e-js/lcov.info
+            backend/artifacts/coverage/e2e-js/raw/v8-coverage.json
+          if-no-files-found: error
+          retention-days: 14

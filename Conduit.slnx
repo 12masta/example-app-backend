@@ -23,5 +23,9 @@
             Path="tests\Conduit.IntegrationTests\Conduit.IntegrationTests.csproj"
             Type="Classic C#"
         />
+        <Project
+            Path="tests\Conduit.PlaywrightTests\Conduit.PlaywrightTests.csproj"
+            Type="Classic C#"
+        />
     </Folder>
 </Solution>

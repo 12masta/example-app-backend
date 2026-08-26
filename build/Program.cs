@@ -49,14 +49,10 @@ Target(
     Test,
     [Build],
     () =>
-    {
-        IEnumerable<string> GetFiles(string d) => Glob.Files(".", d);
-
-        foreach (var file in GetFiles("tests/**/*.csproj"))
-        {
-            Run("dotnet", $"test {file} -c Release --no-restore --no-build --verbosity=normal");
-        }
-    }
+        Run(
+            "dotnet",
+            "test tests/Conduit.IntegrationTests/Conduit.IntegrationTests.csproj -c Release --no-restore --no-build --verbosity=normal --collect:\"XPlat Code Coverage\" --results-directory artifacts/coverage/slice --settings tests/coverlet.runsettings"
+        )
 );
 
 Target(
