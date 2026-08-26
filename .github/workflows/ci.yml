@@ -11,8 +11,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build-and-test:
-    name: Build and test
+  unit-coverage:
+    name: Unit coverage
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
@@ -27,6 +27,18 @@ jobs:
 
       - name: Format, build, and test
         run: dotnet run --project build/build.csproj -- test
+
+      - name: Assert slice coverage is not empty
+        run: python3 tests/assert-cobertura-not-empty.py 'artifacts/coverage/slice/**/coverage.cobertura.xml'
+
+      - name: Upload slice coverage
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: slice-cobertura
+          path: artifacts/coverage/slice/**/coverage.cobertura.xml
+          if-no-files-found: error
+          retention-days: 14
 
   api-spec:
     name: RealWorld API spec (Hurl)
