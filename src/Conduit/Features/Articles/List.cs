@@ -42,11 +42,11 @@ public class List
                     throw new RestException(HttpStatusCode.NotFound, "user", Constants.NOT_FOUND);
                 }
 
-                // Drive Your Feed from FollowedPeople so we do not hydrate the full follow graph.
-                queryable = queryable.Where(x =>
-                    context.FollowedPeople.Any(follow =>
-                        follow.TargetId == currentUser.PersonId
-                        && follow.ObserverId == x.Author!.PersonId
+                // Restrict Your Feed to articles whose author follows the current reader.
+                queryable = queryable.Where(article =>
+                    context.FollowedPeople.Any(relationship =>
+                        relationship.TargetId == currentUser.PersonId
+                        && relationship.ObserverId == article.Author!.PersonId
                     )
                 );
             }
