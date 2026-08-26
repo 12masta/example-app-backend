@@ -5,6 +5,12 @@ on:
     branches:
       - main
   workflow_dispatch:
+    inputs:
+      e2e_ref:
+        description: example-app-e2e git ref (branch, tag, or SHA)
+        required: false
+        default: main
+        type: string
 
 permissions:
   contents: read
@@ -32,7 +38,21 @@ jobs:
           ref: main
           path: frontend
 
-      - name: Setup Node.js
+      - name: Checkout e2e tests
+        uses: actions/checkout@v7
+        with:
+          repository: 12masta/example-app-e2e
+          ref: ${{ inputs.e2e_ref || 'main' }}
+          path: e2e
+
+      - name: Setup Node.js (e2e)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: e2e/package-lock.json
+
+      - name: Setup Node.js (frontend)
         uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -54,15 +74,27 @@ jobs:
         working-directory: frontend
         run: yarn generate
 
-      - name: Restore and build Playwright tests
-        working-directory: backend
-        run: |
-          dotnet restore tests/Conduit.PlaywrightTests/Conduit.PlaywrightTests.csproj --locked-mode
-          dotnet build tests/Conduit.PlaywrightTests/Conduit.PlaywrightTests.csproj -c Release --no-restore
+      - name: Install e2e dependencies
+        working-directory: e2e
+        run: npm ci
 
       - name: Install Playwright Chromium
+        working-directory: e2e
+        run: npx playwright install --with-deps chromium
+
+      - name: Install V8 mapper
+        if: hashFiles('e2e/tools/v8-map/package-lock.json') != ''
+        working-directory: e2e/tools/v8-map
+        run: npm ci
+
+      - name: Restore and build API
         working-directory: backend
-        run: pwsh tests/Conduit.PlaywrightTests/bin/Release/net10.0/playwright.ps1 install --with-deps chromium
+        run: |
+          dotnet restore src/Conduit/Conduit.csproj --locked-mode
+          dotnet build src/Conduit/Conduit.csproj -c Release --no-restore
+
+      - name: Install coverage collector
+        run: dotnet tool install --global dotnet-coverage
 
       - name: Start frontend
         working-directory: frontend
@@ -72,6 +104,25 @@ jobs:
         run: |
           nohup yarn start > "${RUNNER_TEMP}/frontend.log" 2>&1 &
           echo $! > "${RUNNER_TEMP}/frontend.pid"
+
+      - name: Start API with coverage
+        working-directory: backend
+        env:
+          ASPNETCORE_ENVIRONMENT: Development
+          ASPNETCORE_URLS: http://localhost:5080
+          Database__Provider: sqlite
+          Database__ConnectionString: Filename=${{ runner.temp }}/conduit-e2e.db
+        run: |
+          mkdir -p artifacts/coverage/e2e-api
+          dotnet-coverage collect \
+            --session-id conduit-e2e \
+            --server-mode \
+            --background \
+            --output "${{ github.workspace }}/backend/artifacts/coverage/e2e-api/coverage.cobertura.xml" \
+            --output-format cobertura \
+            --include-files "${{ github.workspace }}/backend/src/Conduit/bin/Release/net10.0/Conduit.dll"
+          dotnet-coverage connect --background conduit-e2e \
+            "dotnet run --no-launch-profile --no-build -c Release --project src/Conduit/Conduit.csproj"
 
       - name: Wait for frontend
         run: |
@@ -85,27 +136,36 @@ jobs:
           cat "${RUNNER_TEMP}/frontend.log"
           exit 1
 
-      - name: Run Playwright tests with Coverlet
-        working-directory: backend
+      - name: Wait for backend
+        run: |
+          for i in $(seq 1 90); do
+            if curl -fsS http://localhost:5080/api/tags >/dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Backend did not become ready"
+          exit 1
+
+      - name: Run e2e Playwright suite
+        working-directory: e2e
         env:
           BASE_URL: http://localhost:30401
-        run: >
-          dotnet test tests/Conduit.PlaywrightTests/Conduit.PlaywrightTests.csproj
-          -c Release --no-restore --no-build --verbosity=normal
-          --collect:"XPlat Code Coverage"
-          --results-directory artifacts/coverage/e2e-api
-          --settings tests/coverlet.runsettings
+          API_URL: http://localhost:5080/api
+          E2E_JS_COVERAGE: '1'
+        run: npx playwright test
 
-      - name: Install V8 mapper
-        working-directory: backend/tests/Conduit.PlaywrightTests/v8-map
-        run: npm ci
+      - name: Stop API coverage session
+        if: always()
+        run: dotnet-coverage shutdown conduit-e2e
 
       - name: Map V8 coverage to lcov
-        working-directory: backend
+        if: hashFiles('e2e/tools/v8-map/package-lock.json') != ''
+        working-directory: e2e
         env:
-          REPO_ROOT: ${{ github.workspace }}/backend
+          E2E_ROOT: ${{ github.workspace }}/e2e
           FRONTEND_ROOT: ${{ github.workspace }}/frontend
-        run: node tests/Conduit.PlaywrightTests/v8-map/v8-to-lcov.mjs
+        run: node tools/v8-map/v8-to-lcov.mjs
         continue-on-error: true
 
       - name: Upload e2e API coverage
@@ -113,7 +173,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: e2e-api-cobertura
-          path: backend/artifacts/coverage/e2e-api/**/coverage.cobertura.xml
+          path: backend/artifacts/coverage/e2e-api/coverage.cobertura.xml
           if-no-files-found: error
           retention-days: 14
 
@@ -123,7 +183,7 @@ jobs:
         with:
           name: e2e-js-lcov
           path: |
-            backend/artifacts/coverage/e2e-js/lcov.info
-            backend/artifacts/coverage/e2e-js/raw/v8-coverage.json
-          if-no-files-found: error
+            e2e/test-results/e2e-js/lcov.info
+            e2e/test-results/e2e-js/raw/v8-coverage.json
+          if-no-files-found: warn
           retention-days: 14
