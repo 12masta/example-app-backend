@@ -51,7 +51,7 @@ Target(
     () =>
         Run(
             "dotnet",
-            "test tests/Conduit.IntegrationTests/Conduit.IntegrationTests.csproj -c Release --no-restore --no-build --verbosity=normal --collect:\"XPlat Code Coverage\" --results-directory artifacts/coverage/slice --settings tests/coverlet.runsettings"
+            "test tests/Conduit.IntegrationTests/Conduit.IntegrationTests.csproj -c Release --no-restore --no-build --verbosity=normal --collect:\"XPlat Code Coverage\" --results-directory artifacts/coverage/slice --settings tests/coverlet.runsettings /p:CopyLocalLockFileAssemblies=true /p:PreserveCompilationContext=true"
         )
 );
 

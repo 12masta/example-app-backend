@@ -7,6 +7,9 @@
           <Format>cobertura</Format>
           <Include>[Conduit]*</Include>
           <ExcludeByAttribute>Obsolete,GeneratedCodeAttribute,CompilerGeneratedAttribute</ExcludeByAttribute>
+          <ExcludeByFile>**/obj/**</ExcludeByFile>
+          <UseSourceLink>false</UseSourceLink>
+          <ExcludeAssembliesWithoutSources>None</ExcludeAssembliesWithoutSources>
         </Configuration>
       </DataCollector>
     </DataCollectors>

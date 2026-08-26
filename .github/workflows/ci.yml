@@ -28,6 +28,9 @@ jobs:
       - name: Format, build, and test
         run: dotnet run --project build/build.csproj -- test
 
+      - name: Assert slice coverage is not empty
+        run: python3 tests/assert-cobertura-not-empty.py 'artifacts/coverage/slice/**/coverage.cobertura.xml'
+
       - name: Upload slice coverage
         if: success()
         uses: actions/upload-artifact@v4
