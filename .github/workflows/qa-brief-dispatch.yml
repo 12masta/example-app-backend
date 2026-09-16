@@ -12,12 +12,14 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: Queue central QA Brief
+      - name: Queue QA Brief job
         env:
-          GH_TOKEN: ${{ secrets.QA_BRIEF_DISPATCH_TOKEN }}
+          AGENT_HUB_DISPATCH_URL: ${{ secrets.AGENT_HUB_DISPATCH_URL }}
+          DISPATCH_KEY: ${{ secrets.DISPATCH_KEY }}
         run: |
-          gh workflow run qa-brief.yml \
-            --repo 12masta/example-ai-qa-brief \
-            -f owner="${{ github.repository_owner }}" \
-            -f repo="${{ github.event.repository.name }}" \
-            -f pr_number="${{ github.event.pull_request.number }}"
+          test -n "$AGENT_HUB_DISPATCH_URL"
+          test -n "$DISPATCH_KEY"
+          curl -fsS -X POST "$AGENT_HUB_DISPATCH_URL" \
+            -H "x-agent-hub-key: ${DISPATCH_KEY}" \
+            -H "Content-Type: application/json" \
+            -d "{\"owner\":\"${{ github.repository_owner }}\",\"repo\":\"${{ github.event.repository.name }}\",\"pr_number\":\"${{ github.event.pull_request.number }}\"}"
