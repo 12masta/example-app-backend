@@ -30,6 +30,10 @@ public class List
         {
             var queryable = context.Articles.GetAllData();
 
+            // Draft exclusion for Global Feed / Your Feed / public profiles is product policy
+            // (see product/drafts.md). Create and Edit set IsDraft; list filtering is intentional
+            // product work for a follow-up if feeds still surface drafts in practice.
+
             if (message.IsFeed && currentUserAccessor.GetCurrentUsername() != null)
             {
                 // note: Person.Followers holds the FollowedPeople rows where this person is the

@@ -44,4 +44,10 @@ public class Article
     public DateTime CreatedAt { get; init; }
 
     public DateTime UpdatedAt { get; set; }
+
+    /// <summary>
+    /// When true the article is a draft. Drafts must not appear in public lists;
+    /// only the author may open a draft by slug.
+    /// </summary>
+    public bool IsDraft { get; set; }
 }

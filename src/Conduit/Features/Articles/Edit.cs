@@ -21,6 +21,7 @@ public class Edit
     public class ArticleData
     {
         private string[]? _tagList;
+        private bool? _isDraft;
 
         public string? Title { get; set; }
 
@@ -38,8 +39,24 @@ public class Edit
             }
         }
 
+        /// <summary>
+        /// When set, updates draft vs published. Absent preserves the current value.
+        /// </summary>
+        public bool? IsDraft
+        {
+            get => _isDraft;
+            set
+            {
+                _isDraft = value;
+                IsDraftSet = true;
+            }
+        }
+
         [JsonIgnore]
         public bool TagListSet { get; private set; }
+
+        [JsonIgnore]
+        public bool IsDraftSet { get; private set; }
     }
 
     public record Command(Model Model, string Slug) : IRequest<ArticleEnvelope>;
@@ -83,6 +100,10 @@ public class Edit
 
             article.Description = message.Model.Article.Description ?? article.Description;
             article.Body = message.Model.Article.Body ?? article.Body;
+            if (message.Model.Article.IsDraftSet && message.Model.Article.IsDraft is { } isDraft)
+            {
+                article.IsDraft = isDraft;
+            }
             if (
                 !string.IsNullOrEmpty(message.Model.Article.Title)
                 && message.Model.Article.Title != article.Title

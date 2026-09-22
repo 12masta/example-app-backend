@@ -23,6 +23,11 @@ public class Create
         public string? Body { get; init; }
 
         public string[]? TagList { get; init; }
+
+        /// <summary>
+        /// When true, save as a draft. When false or omitted, publish.
+        /// </summary>
+        public bool IsDraft { get; init; }
     }
 
     public class ArticleDataValidator : AbstractValidator<ArticleData>
@@ -90,6 +95,7 @@ public class Create
                 Description = message.Article.Description,
                 Title = message.Article.Title,
                 Slug = uniqueSlug,
+                IsDraft = message.Article.IsDraft,
             };
             await context.Articles.AddAsync(article, cancellationToken);
 
