@@ -163,4 +163,6 @@ jobs:
 
       - name: Exit with ZAP status
         if: always()
-        run: exit ${{ steps.zap_status.outputs.exit_code || 1 }}
+        run: |
+          code="${{ steps.zap_status.outputs.exit_code }}"
+          exit "${code:-1}"
