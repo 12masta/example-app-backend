@@ -72,6 +72,15 @@ jobs:
           mkdir -p zap-work
           curl -fsS http://localhost:5080/swagger/v1/swagger.json -o zap-work/openapi.json
           test -s zap-work/openapi.json
+          # ASP.NET emits relative server "/"; ZAP needs an absolute base URL.
+          node <<'NODE'
+          const fs = require('fs');
+          const path = 'zap-work/openapi.json';
+          const spec = JSON.parse(fs.readFileSync(path, 'utf8'));
+          spec.servers = [{ url: 'http://localhost:5080' }];
+          fs.writeFileSync(path, JSON.stringify(spec, null, 2));
+          console.log('OpenAPI servers set to http://localhost:5080; paths=', Object.keys(spec.paths || {}).length);
+          NODE
 
       - name: OWASP ZAP API Scan
         id: zap
