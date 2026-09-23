@@ -85,7 +85,6 @@ jobs:
           allow_issue_writing: false
           fail_action: true
           artifact_name: zap-api-scan-raw
-          cmd_options: '-O localhost'
 
       - name: Record ZAP conclusion
         id: zap_status
