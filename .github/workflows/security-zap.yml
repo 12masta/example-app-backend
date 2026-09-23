@@ -164,10 +164,25 @@ jobs:
         run: |
           test -n "$AGENT_HUB_DISPATCH_URL"
           test -n "$DISPATCH_KEY"
-          curl -fsS -X POST "$AGENT_HUB_DISPATCH_URL" \
-            -H "x-agent-hub-key: ${DISPATCH_KEY}" \
-            -H "Content-Type: application/json" \
-            -d "{\"agentSlug\":\"security-test-analysis\",\"source\":{\"type\":\"github-actions\",\"repository\":\"${GITHUB_REPOSITORY}\",\"workflowRunId\":${GITHUB_RUN_ID},\"runAttempt\":${GITHUB_RUN_ATTEMPT},\"artifactName\":\"agent-hub-security-v1\"}}"
+          payload="{\"agentSlug\":\"security-test-analysis\",\"source\":{\"type\":\"github-actions\",\"repository\":\"${GITHUB_REPOSITORY}\",\"workflowRunId\":${GITHUB_RUN_ID},\"runAttempt\":${GITHUB_RUN_ATTEMPT},\"artifactName\":\"agent-hub-security-v1\"}}"
+          response_file="${RUNNER_TEMP}/agent-hub-dispatch-response.txt"
+          http_code="$(
+            curl -sS -o "$response_file" -w '%{http_code}' -X POST "$AGENT_HUB_DISPATCH_URL" \
+              -H "x-agent-hub-key: ${DISPATCH_KEY}" \
+              -H "Content-Type: application/json" \
+              -d "$payload"
+          )"
+          if [ "$http_code" -lt 200 ] || [ "$http_code" -ge 300 ]; then
+            echo "Agent Hub dispatch failed with HTTP ${http_code}"
+            if [ -s "$response_file" ]; then
+              echo "Response body:"
+              cat "$response_file"
+            else
+              echo "(empty response body)"
+            fi
+            exit 1
+          fi
+          echo "Agent Hub dispatch succeeded (HTTP ${http_code})"
 
       - name: Exit with ZAP status
         if: always()

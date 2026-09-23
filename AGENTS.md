@@ -52,7 +52,8 @@ The `test` target also writes Coverlet Cobertura under `artifacts/coverage/slice
 
 - Workflow: `.github/workflows/security-zap.yml` (pull_request, push to `main`, weekly schedule, `workflow_dispatch`).
 - Starts this API on `http://localhost:5080`, downloads OpenAPI from `/swagger/v1/swagger.json`, and runs OWASP ZAP API Scan (`zaproxy/action-api-scan`, pinned).
-- Uploads artifact `agent-hub-security-v1` (ZAP JSON, OpenAPI, workflow metadata, optional HTML/logs) then dispatches Agent Hub `security-test-analysis` when `AGENT_HUB_DISPATCH_URL` and `DISPATCH_KEY` are set. Dispatch body has no artifact URLs.
+- Uploads artifact `agent-hub-security-v1` (ZAP JSON, OpenAPI, workflow metadata, optional HTML/logs) then dispatches Agent Hub `security-test-analysis` when `AGENT_HUB_DISPATCH_URL` and `DISPATCH_KEY` are set. Dispatch body has no artifact URLs. Non-2xx responses print the Hub response body in the workflow log.
+- Hub `security-test-analysis` profile must bind code-host and model connections and allowlist `12masta/example-app-backend`; otherwise dispatch returns HTTP 400. Merge the Agent Hub PR that ships the security analyze handler before expecting live analysis runs.
 - Manifest builder: `tools/agent-hub-manifest/build-security-manifest.mjs`. The Hub never starts the API or ZAP.
 
 ## Development Practices
