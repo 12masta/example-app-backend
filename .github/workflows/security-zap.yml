@@ -23,6 +23,9 @@ jobs:
     name: OWASP ZAP API scan
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    env:
+      AGENT_HUB_DISPATCH_URL: ${{ secrets.AGENT_HUB_DISPATCH_URL }}
+      DISPATCH_KEY: ${{ secrets.DISPATCH_KEY }}
 
     steps:
       - name: Checkout repository
@@ -149,10 +152,7 @@ jobs:
           retention-days: 14
 
       - name: Dispatch Security Test Analysis
-        if: ${{ always() && secrets.AGENT_HUB_DISPATCH_URL != '' && secrets.DISPATCH_KEY != '' }}
-        env:
-          AGENT_HUB_DISPATCH_URL: ${{ secrets.AGENT_HUB_DISPATCH_URL }}
-          DISPATCH_KEY: ${{ secrets.DISPATCH_KEY }}
+        if: ${{ always() && env.AGENT_HUB_DISPATCH_URL != '' && env.DISPATCH_KEY != '' }}
         run: |
           test -n "$AGENT_HUB_DISPATCH_URL"
           test -n "$DISPATCH_KEY"
