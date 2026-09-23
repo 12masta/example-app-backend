@@ -276,7 +276,9 @@ __pycache__/
 # tools/
 tools/Cake.CoreCLR
 .vscode
-tools
+tools/*
+!tools/agent-hub-manifest/
+!tools/agent-hub-manifest/**
 .dotnet
 
 # .env file contains default environment variables for docker
