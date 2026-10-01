@@ -31,6 +31,12 @@ public class Article
     [NotMapped]
     public int FavoritesCount => ArticleFavorites?.Count ?? 0;
 
+    /// <summary>
+    /// Estimated reading time in minutes. Set before list responses null Body.
+    /// </summary>
+    [NotMapped]
+    public int ReadingTimeMinutes { get; set; }
+
     [NotMapped]
     public List<string> TagList =>
         [.. ArticleTags.Where(x => x.TagId is not null).Select(x => x.TagId!)];

@@ -110,9 +110,10 @@ public class List
                 .AsNoTracking()
                 .ToListAsync(cancellationToken);
 
-            // the spec omits the article body in list responses (null values are not serialized)
+            // capture reading time before the spec omits body in list responses
             foreach (var article in articles)
             {
+                article.WithReadingTime();
                 article.Body = null;
             }
 

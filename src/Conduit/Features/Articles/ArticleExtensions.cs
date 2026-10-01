@@ -12,4 +12,10 @@ public static class ArticleExtensions
             .Include(x => x.ArticleFavorites)
             .Include(x => x.ArticleTags)
             .AsNoTracking();
+
+    public static Article WithReadingTime(this Article article)
+    {
+        article.ReadingTimeMinutes = ReadingTime.MinutesFromBody(article.Body);
+        return article;
+    }
 }
