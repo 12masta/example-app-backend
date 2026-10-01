@@ -7,6 +7,8 @@ Private RealWorld (Conduit) API for agent demos. This repository is a copy of [r
 
 ## Hosted demo (Azure free tier)
 
+Deploy pipeline: GitHub Actions `Deploy to Azure` on `main`.
+
 - API: `https://app-example-app-api.azurewebsites.net/api`
 - Swagger: `https://app-example-app-api.azurewebsites.net/swagger`
 - Resource group: `rg-example-app` (App Service F1 Linux + SQLite on `/home/realworld.db`)
