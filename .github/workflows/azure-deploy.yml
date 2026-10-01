@@ -1,0 +1,53 @@
+name: Deploy to Azure
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: azure-deploy-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    name: Publish API to App Service
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 10.0.302
+
+      - name: Publish Conduit
+        run: dotnet publish src/Conduit/Conduit.csproj -c Release -o "${{ runner.temp }}/conduit-publish"
+
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: app-example-app-api
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          package: ${{ runner.temp }}/conduit-publish
+
+      - name: Smoke check /api/tags
+        run: |
+          set -euo pipefail
+          URL="https://app-example-app-api.azurewebsites.net/api/tags"
+          for i in 1 2 3 4 5 6 7 8 9 10; do
+            if curl -fsS "$URL" | tee /tmp/tags.json; then
+              exit 0
+            fi
+            echo "Attempt $i failed; waiting..."
+            sleep 10
+          done
+          echo "Smoke check failed for $URL"
+          exit 1
