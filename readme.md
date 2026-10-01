@@ -5,6 +5,13 @@ Private RealWorld (Conduit) API for agent demos. This repository is a copy of [r
 - API: `http://localhost:5080/api`
 - Swagger: `http://localhost:5080/swagger`
 
+## Hosted demo (Azure free tier)
+
+- API: `https://app-example-app-api.azurewebsites.net/api`
+- Swagger: `https://app-example-app-api.azurewebsites.net/swagger`
+- Resource group: `rg-example-app` (App Service F1 Linux + SQLite on `/home/realworld.db`)
+- Deploy: push to `main` or run workflow `Deploy to Azure` (secret `AZURE_WEBAPP_PUBLISH_PROFILE`)
+
 # ![RealWorld Example App](logo.png)
 
 ASP.NET Core codebase containing real world examples (CRUD, auth, advanced patterns, etc.) that adheres to the [RealWorld](https://github.com/gothinkster/realworld-example-apps) spec and API.
