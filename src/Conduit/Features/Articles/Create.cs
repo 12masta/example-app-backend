@@ -100,7 +100,7 @@ public class Create
 
             await context.SaveChangesAsync(cancellationToken);
 
-            return new ArticleEnvelope(article);
+            return new ArticleEnvelope(article.WithReadingTime());
         }
     }
 }

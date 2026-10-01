@@ -146,7 +146,7 @@ public class Edit
                 throw new RestException(HttpStatusCode.NotFound, "article", Constants.NOT_FOUND);
             }
 
-            return new ArticleEnvelope(article);
+            return new ArticleEnvelope(article.WithReadingTime());
         }
 
         /// <summary>
